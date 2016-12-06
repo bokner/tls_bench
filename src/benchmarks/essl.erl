@@ -4,10 +4,9 @@
 -include("tls_bench.hrl").
 
 -record(state, {socket, mod, tls_opt}).
--record(tlssock, {tcpsock :: inet:socket(), tlsport :: port()}).
 
 -export([
-    connect/6,
+    connect/5,
     listen/4,
     accept/1,
     handshake/1,
@@ -20,22 +19,22 @@
     recv/2
 ]).
 
-connect(Mod, Host, Port, TcpOptions, TlsOptions, Timeout) ->
+connect(Mod, Host, Port, Options, Timeout) ->
     Resp = case Mod of
         ?MOD_ETLS ->
-            etls:connect(Host, Port, TcpOptions ++ TlsOptions, Timeout);
+            etls:connect(Host, Port, Options, Timeout);
         ?MOD_FAST_TLS ->
-            {ok, TcpSocket} = gen_tcp:connect(Host, Port, TcpOptions, Timeout),
-            {ok, TlsSocket} = fast_tls:tcp_to_tls(TcpSocket, [connect|TlsOptions]),
+            {ok, TcpSocket} = gen_tcp:connect(Host, Port, Options, Timeout),
+            {ok, TlsSocket} = fast_tls:tcp_to_tls(TcpSocket, [connect|Options]),
             {ok, TlsSocket};
         ?MOD_P1_TLS ->
-            {ok, TcpSocket} = gen_tcp:connect(Host, Port, TcpOptions, Timeout),
-            {ok, TlsSocket} = p1_tls:tcp_to_tls(TcpSocket, [connect|TlsOptions]),
+            {ok, TcpSocket} = gen_tcp:connect(Host, Port, Options, Timeout),
+            {ok, TlsSocket} = p1_tls:tcp_to_tls(TcpSocket, [connect|Options]),
             {ok, TlsSocket};
         ?MOD_SSL ->
-            ssl:connect(Host, Port, TcpOptions ++ TlsOptions, Timeout);
+            ssl:connect(Host, Port, Options, Timeout);
         ?MOD_TCP ->
-            gen_tcp:connect(Host, Port, TcpOptions, Timeout)
+            gen_tcp:connect(Host, Port, Options, Timeout)
     end,
 
     case Resp of

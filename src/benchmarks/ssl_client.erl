@@ -23,12 +23,11 @@ benchmark(ClientMod, Port, ConcurrentConnections, Requests, MessageLength) ->
     Host = tlsb_utils:lookup(host, ClientOpt),
     ConnectTimeout = tlsb_utils:lookup(connect_timeout, ClientOpt),
     RecvTimeout = tlsb_utils:lookup(recv_timeout, ClientOpt),
-    TcpOpt = tlsb_utils:lookup(tcp_opt, ClientOpt),
-    TlsOpt = tlsb_config:get_tls_opt(ClientMod, ClientOpt),
+    Opts = impl_opts(ClientMod, ClientOpt),
     ServerTag = tlsb_config:get_server_by_port(Port),
 
     ReqPerConnection = round(Requests/ ConcurrentConnections),
-    Message = Message = <<?SENT_BYTE:MessageLength/little-signed-integer-unit:8>>,
+    Message = <<?SENT_BYTE:MessageLength/little-signed-integer-unit:8>>,
     SeqPerClient = lists:seq(1, ReqPerConnection),
 
     ?INFO_MSG("## start testing on ~p:~p, server stack: ~p, client stack: ~p", [Host, Port, ServerTag, ClientMod]),
@@ -37,9 +36,8 @@ benchmark(ClientMod, Port, ConcurrentConnections, Requests, MessageLength) ->
         tlsb_utils:format_size(MessageLength),
         Requests,
         ConcurrentConnections]),
-
     ClientFun = fun() ->
-        {ok, Socket} = essl:connect(ClientMod, Host, Port, TcpOpt, TlsOpt, ConnectTimeout),
+        {ok, Socket} = essl:connect(ClientMod, Host, Port, Opts, ConnectTimeout),
 
         SendFun = fun(_) ->
             ok = essl:send(Socket, Message)
@@ -86,3 +84,11 @@ recv(Socket, Bytes, Timeout) ->
             ?ERROR_MSG("Client received unexpected msg: ~p",[Error]),
             {error, Error}
     end.
+
+impl_opts(gen_tcp, ClientOpt) ->
+    tlsb_utils:lookup(tcp_opt, ClientOpt);
+
+impl_opts(ssl, ClientOpt) ->
+    TcpOpts = tlsb_utils:lookup(tcp_opt, ClientOpt),
+    TlsOpts = tlsb_config:get_tls_opt(ssl, ClientOpt),
+    TcpOpts ++ TlsOpts.

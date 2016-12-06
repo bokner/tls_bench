@@ -29,3 +29,9 @@
 
 -define(CRITICAL_MSG(Format, Args),
     io:format("CRITICAL "++Format++"~n", Args)).
+
+%% ranch socket
+-record(essl_socket, {socket, mod, options}).
+
+%% P1 socket
+-record(tlssock, {tcpsock :: inet:socket(), tlsport :: port()}).
