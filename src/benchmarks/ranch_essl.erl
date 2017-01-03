@@ -56,6 +56,9 @@ connect(P1_Mod, Host, Port, Options, Timeout) when P1_Mod == ?MOD_FAST_TLS orels
 connect(?MOD_SSL, Host, Port, Options, Timeout) ->
             ranch_ssl:connect(Host, Port, Options, Timeout);
 
+connect(?MOD_ERLTLS, Host, Port, Options, Timeout) ->
+            ranch_erltls:connect(Host, Port, Options, Timeout);
+
 connect(?MOD_TCP, Host, Port, Options, Timeout) ->
             ranch_tcp:connect(Host, Port, Options, Timeout).
 
@@ -81,7 +84,10 @@ listen(P1_Mod, Options) when P1_Mod == ?MOD_FAST_TLS orelse P1_Mod == ?MOD_P1_TL
 listen(?MOD_SSL, Options) ->
   ranch_ssl:listen(Options);
 
-listen(gen_tcp, Options) ->
+listen(?MOD_ERLTLS, Options) ->
+  ranch_erltls:listen(Options);
+
+listen(?MOD_TCP, Options) ->
     ranch_tcp:listen(Options).
 
 accept(LSocket, Timeout) ->
@@ -91,10 +97,13 @@ accept(LSocket, Timeout) ->
   end.
 
 accept1(#essl_socket{socket = LSocket, mod = ?MOD_ETLS}, Timeout) ->
-            ranch_etls:accept(LSocket, Timeout);
+    ranch_etls:accept(LSocket, Timeout);
 
 accept1(#essl_socket{socket = LSocket, mod = ?MOD_SSL}, Timeout) ->
     ranch_ssl:accept(LSocket, Timeout);
+
+accept1(#essl_socket{socket = LSocket, mod = ?MOD_ERLTLS}, Timeout) ->
+    ranch_erltls:accept(LSocket, Timeout);
 
 accept1(#essl_socket{socket = LSocket, mod = P1_Mod, options = Options}, Timeout)
   when P1_Mod == ?MOD_FAST_TLS orelse P1_Mod == ?MOD_P1_TLS ->
@@ -123,6 +132,9 @@ accept_ack1(#essl_socket{socket = LSocket, mod = ?MOD_ETLS}, Timeout) ->
 accept_ack1(#essl_socket{socket = LSocket, mod = ?MOD_SSL}, Timeout) ->
     ok = ranch_ssl:accept_ack(LSocket, Timeout);
 
+accept_ack1(#essl_socket{socket = LSocket, mod = ?MOD_ERLTLS}, Timeout) ->
+    ok = ranch_erltls:accept_ack(LSocket, Timeout);
+
 accept_ack1(#essl_socket{socket = LSocket, mod = P1_Mod}, Timeout)
   when P1_Mod == ?MOD_FAST_TLS orelse P1_Mod == ?MOD_P1_TLS ->
     ok = ranch_tcp:accept_ack(LSocket, Timeout);
@@ -136,6 +148,9 @@ peername(#essl_socket{socket = LSocket, mod = ?MOD_ETLS}) ->
 
 peername(#essl_socket{socket = LSocket, mod = ?MOD_SSL}) ->
   ranch_ssl:peername(LSocket);
+
+peername(#essl_socket{socket = LSocket, mod = ?MOD_ERLTLS}) ->
+  ranch_erltls:peername(LSocket);
 
 peername(#essl_socket{socket = LSocket, mod = P1_Mod})
   when P1_Mod == ?MOD_FAST_TLS orelse P1_Mod == ?MOD_P1_TLS ->
@@ -151,6 +166,9 @@ sockname(#essl_socket{socket = LSocket, mod = ?MOD_ETLS}) ->
 sockname(#essl_socket{socket = LSocket, mod = ?MOD_SSL}) ->
   ranch_ssl:sockname(LSocket);
 
+sockname(#essl_socket{socket = LSocket, mod = ?MOD_ERLTLS}) ->
+  ranch_erltls:sockname(LSocket);
+
 sockname(#essl_socket{socket = LSocket, mod = P1_Mod})
   when P1_Mod == ?MOD_FAST_TLS orelse P1_Mod == ?MOD_P1_TLS ->
   ranch_tcp:sockname(LSocket);
@@ -163,6 +181,9 @@ shutdown(#essl_socket{socket = LSocket, mod = ?MOD_ETLS}, Type) ->
 
 shutdown(#essl_socket{socket = LSocket, mod = ?MOD_SSL}, Type) ->
   ranch_ssl:shutdown(LSocket, Type);
+
+shutdown(#essl_socket{socket = LSocket, mod = ?MOD_ERLTLS}, Type) ->
+  ranch_erltls:shutdown(LSocket, Type);
 
 shutdown(#essl_socket{socket = LSocket, mod = P1_Mod}, Type)
   when P1_Mod == ?MOD_FAST_TLS orelse P1_Mod == ?MOD_P1_TLS ->
@@ -178,6 +199,9 @@ setopts(#essl_socket{socket = LSocket, mod = ?MOD_ETLS}, Options) ->
 setopts(#essl_socket{socket = LSocket, mod = ?MOD_SSL}, Options) ->
   ranch_ssl:setopts(LSocket, Options);
 
+setopts(#essl_socket{socket = LSocket, mod = ?MOD_ERLTLS}, Options) ->
+  ranch_erltls:setopts(LSocket, Options);
+
 setopts(#essl_socket{socket = LSocket, mod = P1_Mod}, Options)
   when P1_Mod == ?MOD_FAST_TLS orelse P1_Mod == ?MOD_P1_TLS ->
   %%TCPSock = get_tcpsock(LSocket),
@@ -191,6 +215,9 @@ controlling_process(#essl_socket{socket = LSocket, mod = ?MOD_ETLS}, Pid) ->
 
 controlling_process(#essl_socket{socket = LSocket, mod = ?MOD_SSL}, Pid) ->
   ranch_ssl:controlling_process(LSocket, Pid);
+
+controlling_process(#essl_socket{socket = LSocket, mod = ?MOD_ERLTLS}, Pid) ->
+  ranch_erltls:controlling_process(LSocket, Pid);
 
 controlling_process(#essl_socket{socket = LSocket, mod = P1_Mod}, Pid)
   when P1_Mod == ?MOD_FAST_TLS orelse P1_Mod == ?MOD_P1_TLS ->
@@ -206,6 +233,9 @@ send(#essl_socket{socket = LSocket, mod = ?MOD_ETLS}, Data) ->
 send(#essl_socket{socket = LSocket, mod = ?MOD_SSL}, Data) ->
   ranch_ssl:send(LSocket, Data);
 
+send(#essl_socket{socket = LSocket, mod = ?MOD_ERLTLS}, Data) ->
+  ranch_erltls:send(LSocket, Data);
+
 send(#essl_socket{socket = LSocket, mod = P1_Mod}, Data) 
   when P1_Mod == ?MOD_FAST_TLS orelse P1_Mod == ?MOD_P1_TLS ->
   P1_Mod:send(LSocket, Data);
@@ -219,6 +249,9 @@ recv(#essl_socket{socket = LSocket, mod = ?MOD_ETLS}, Size, Timeout) ->
 recv(#essl_socket{socket = LSocket, mod = ?MOD_SSL}, Size, Timeout) ->
   ranch_ssl:recv(LSocket, Size, Timeout);
 
+recv(#essl_socket{socket = LSocket, mod = ?MOD_ERLTLS}, Size, Timeout) ->
+  ranch_erltls:recv(LSocket, Size, Timeout);
+
 recv(#essl_socket{socket = LSocket, mod = P1_Mod}, Size, Timeout) 
   when P1_Mod == ?MOD_FAST_TLS orelse P1_Mod == ?MOD_P1_TLS ->
   P1_Mod:recv(LSocket, Size, Timeout);
@@ -228,12 +261,17 @@ recv(#essl_socket{socket = LSocket, mod = ?MOD_TCP}, Size, Timeout) ->
 
 close(#essl_socket{socket = Socket, mod = ?MOD_ETLS}) ->
   ranch_etls:close(Socket);
+
 close(#essl_socket{socket = Socket, mod = P1_Mod})
   when P1_Mod == ?MOD_FAST_TLS orelse P1_Mod == ?MOD_P1_TLS ->
   ranch_tcp:close(Socket#tlssock.tcpsock);
 
 close(#essl_socket{socket = Socket, mod = ?MOD_SSL}) ->
   ranch_ssl:close(Socket);
+
+close(#essl_socket{socket = Socket, mod = ?MOD_ERLTLS}) ->
+  ranch_erltls:close(Socket);
+
 close(#essl_socket{socket = Socket, mod = ?MOD_TCP}) ->
   ranch_tcp:close(Socket).
 

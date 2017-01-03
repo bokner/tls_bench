@@ -43,7 +43,9 @@ ranch_listeners() ->
 impl_opts(gen_tcp, _ImplConfig, _SharedConfig) ->
   [];
 
-impl_opts(SSL_Mod, ImplConfig, SharedConfig) when SSL_Mod == ?MOD_ETLS orelse SSL_Mod == ?MOD_SSL -> 
+impl_opts(SSL_Mod, ImplConfig, SharedConfig) when SSL_Mod == ?MOD_ETLS 
+	orelse SSL_Mod == ?MOD_SSL 
+	orelse SSL_Mod == ?MOD_ERLTLS -> 
   TLSOpts = tlsb_utils:lookup(tls_opt, SharedConfig),
   ImplConfig ++ TLSOpts;
 
@@ -55,6 +57,7 @@ impl_opts(P1_Mod, ImplConfig, SharedConfig)
 start_app(?MOD_TCP) -> ok;
 start_app(?MOD_SSL) -> application:ensure_all_started(ssl);
 start_app(?MOD_ETLS) -> application:ensure_all_started(etls);
+start_app(?MOD_ERLTLS) -> application:ensure_all_started(erltls);
 start_app(P1_Mod) when P1_Mod == ?MOD_FAST_TLS orelse P1_Mod == ?MOD_P1_TLS -> 
   application:ensure_all_started(P1_Mod).
 
